@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/neethu-ms/tinyapp/issues"
   },
-  "homepage": "https://github.com/neethu-ms/tinyapp#readme"
+  "homepage": "https://github.com/neethu-ms/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }

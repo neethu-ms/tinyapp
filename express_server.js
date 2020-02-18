@@ -10,6 +10,12 @@ const urlDatabase = {
   '9sm5xK': "http://www.google.com"
 };
 
+app.post('/urls/:shortURL/delete', (req, res) => {
+  console.log('in post');
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+});
+
 app.get('/', (req, res) => {
   res.send("Hello!");
 });
@@ -55,6 +61,8 @@ app.get('/u/:shortURL',(req, res) => {
   let longURL =  urlDatabase[shortURL];
   res.redirect(`${longURL}`);
 });
+
+
 
 const generateRandomString =  function() {
   const alphabetString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';

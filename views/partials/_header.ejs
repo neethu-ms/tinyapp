@@ -9,11 +9,12 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
+      <div class="navbar-nav ml-auto">
         <% if(!username){ %>
-          <div class="navbar-nav">
-          <a class="nav-item nav-link" href="/login">My URLs</a>
-          <a class="nav-item nav-link" href="/register">Create New URL</a>
-        </div>
+          
+          <a class="nav-item nav-link" href="/login">Login</a>
+          <a class="nav-item nav-link" href="/register">Register</a>
+        
         <!-- <form method="POST" action='/login'>
           <input placeholder="Username" name="username">
           <button>Login</button>
@@ -24,6 +25,7 @@
           <button class='btn btn-success border border-secondary'>Logout</button>
         </form>
         <%}%>
+      </div>
       </div>
     </div>
     

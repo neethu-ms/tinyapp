@@ -126,14 +126,31 @@ app.get('/register', (req, res) => {
   res.render("register",templateVars);
 });
 
+const emailLookUp = function(email) {
+  let existingEntries = Object.values(users);
+  console.log("existing",existingEntries);
+  let found = existingEntries.find(x => x.email === email);
+  if (found) {
+    return true;
+  }
+
+  return false;
+};
 app.post('/register', (req, res) => {
   let randomID = "U" + generateRandomString();
+  let emailId = req.body.email;
+  let password = req.body.password;
+  if (!emailId || !password || emailLookUp(emailId)) {
+    res.status(400).send();
+  }
   let newUser =  {
     id: randomID,
-    email: req.body.email,
+    email: emailId,
     password: req.body.password
   };
   users[randomID] = newUser;
   res.cookie('user_id',randomID);
   res.redirect("/urls");
 });
+
+

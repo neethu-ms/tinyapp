@@ -58,7 +58,7 @@ app.get('/urls', (req, res) => {
   };
   console.log(req.cookies);
   if (req.cookies !== undefined) {
-    templateVars.username = req.cookies["username"];
+    templateVars.user = users[req.cookies["user_id"]];
   }
   
   res.render("urls_index", templateVars);
@@ -67,8 +67,7 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   let templateVars = {};
   if (req.cookies !== undefined) {
-    templateVars.username = req.cookies["username"];
-    templateVars.userid = req.cookies["user_id"];
+    templateVars.user = users[req.cookies["user_id"]];
   }
   res.render("urls_new",templateVars);
 });
@@ -79,8 +78,7 @@ app.get('/urls/:shortURL', (req, res) => {
     longURL: urlDatabase[req.params.shortURL]
   };
   if (req.cookies !== undefined) {
-    templateVars.username = req.cookies["username"];
-    templateVars.userid = req.cookies["user_id"];
+    templateVars.user = users[req.cookies["user_id"]];
   }
   res.render("urls_show",templateVars);
 });
@@ -103,7 +101,7 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username','');
+  res.clearCookie('user_id','');
   res.redirect('/urls');
 });
 
@@ -120,7 +118,7 @@ const generateRandomString =  function() {
 app.get('/register', (req, res) => {
   let templateVars = {};
   if (req.cookies !== undefined) {
-    templateVars.username = req.cookies["username"];
+    templateVars.user = users[req.cookies["user_id"]];
     
   }
   res.render("register",templateVars);
@@ -141,7 +139,7 @@ app.post('/register', (req, res) => {
   let emailId = req.body.email;
   let password = req.body.password;
   if (!emailId || !password || emailLookUp(emailId)) {
-    res.status(400).send();
+    res.status(400).send('BAD REQUEST');
   }
   let newUser =  {
     id: randomID,

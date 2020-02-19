@@ -4,6 +4,19 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended:true}));
 let cookieParser = require('cookie-parser');
+
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
 app.use(cookieParser());
 
 app.set('view engine', 'ejs');
@@ -55,6 +68,7 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {};
   if (req.cookies !== undefined) {
     templateVars.username = req.cookies["username"];
+    templateVars.userid = req.cookies["user_id"];
   }
   res.render("urls_new",templateVars);
 });
@@ -66,6 +80,7 @@ app.get('/urls/:shortURL', (req, res) => {
   };
   if (req.cookies !== undefined) {
     templateVars.username = req.cookies["username"];
+    templateVars.userid = req.cookies["user_id"];
   }
   res.render("urls_show",templateVars);
 });
@@ -106,6 +121,19 @@ app.get('/register', (req, res) => {
   let templateVars = {};
   if (req.cookies !== undefined) {
     templateVars.username = req.cookies["username"];
+    
   }
   res.render("register",templateVars);
+});
+
+app.post('/register', (req, res) => {
+  let randomID = "U" + generateRandomString();
+  let newUser =  {
+    id: randomID,
+    email: req.body.email,
+    password: req.body.password
+  };
+  users[randomID] = newUser;
+  res.cookie('user_id',randomID);
+  res.redirect("/urls");
 });

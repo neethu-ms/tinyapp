@@ -96,13 +96,10 @@ app.get('/u/:shortURL',(req, res) => {
   res.redirect(`${longURL}`);
 });
 
-app.post('/login', (req, res) => {
-  res.cookie('username',req.body.username).redirect('/urls');
-});
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id','');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 const generateRandomString =  function() {
@@ -124,12 +121,44 @@ app.get('/register', (req, res) => {
   res.render("register",templateVars);
 });
 
+app.post('/login', (req, res) => {
+ 
+  let emailId = req.body.email;
+  let password = req.body.password;
+  if (!emailId || !password) {
+    res.status(400).send('BAD REQUEST');
+  }
+
+  let loggedInUser = emailLookUp(emailId);
+  if (loggedInUser) {
+    if (password !== loggedInUser.password) {
+      res.status(403).send('BAD REQUEST');
+    }
+    res.cookie('user_id',loggedInUser.id);
+    res.redirect("/urls");
+  } else {
+    res.status(403).send('BAD REQUEST');
+  }
+  
+  res.redirect('/login');
+});
+
+
+app.get('/login', (req, res) => {
+  let templateVars = {};
+  if (req.cookies !== undefined) {
+    templateVars.user = users[req.cookies["user_id"]];
+    
+  }
+  res.render("login",templateVars);
+});
+
 const emailLookUp = function(email) {
   let existingEntries = Object.values(users);
   console.log("existing",existingEntries);
   let found = existingEntries.find(x => x.email === email);
   if (found) {
-    return true;
+    return found;
   }
 
   return false;

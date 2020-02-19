@@ -15,11 +15,7 @@
           <a class="nav-item nav-link" href="/login">Login</a>
           <a class="nav-item nav-link" href="/register">Register</a>
         
-        <!-- <form method="POST" action='/login'>
-          <input placeholder="Username" name="username">
-          <button>Login</button>
-        </form> -->
-        <%} else{%>
+          <%} else{%>
         <form method="POST" action='/logout'>
           <span> Logged In As: <%= user.email %></span>&nbsp;
           <button class='btn btn-success border border-secondary'>Logout</button>

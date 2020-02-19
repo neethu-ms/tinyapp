@@ -7,21 +7,16 @@
 </head>
 <body>
   <%- include('./partials/_header') %>
-  <div class="card text-center">
-      <div class="card-header"></div>
-      <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %><h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-      </div>
-    <div class="card-footer text-muted">
-      <h2>Edit</h2>
-      <form method = "POST" action ='/urls/<%=shortURL%>'>
-        New URL: <input type="text" name='newURL'>
-        <button class='btn btn-primary'>Submit</button>
-      </form>
-    </div>
-  </div>
-  </div>
+<div class='ml-3'>
+<h1>Login</h1>
+<form method='post' action='/register'>
+  <label for="email" class='font-weight-bold'>Email address</label>
+  <input name = 'email' type = "email" placeholder = "Enter email" class = "form-control w-25 font-weight-bold"> 
+  <label for="password" class='font-weight-bold'>Password</label>
+  <input name = 'password' type = "password" placeholder = "Password" class = "form-control w-25 font-weight-bold"> <br/> <br/> 
+  <button class='btn btn-primary'>Register</button>
+</form>
+</div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

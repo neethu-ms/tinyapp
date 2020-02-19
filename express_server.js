@@ -102,3 +102,10 @@ const generateRandomString =  function() {
   return newString;
 };
 
+app.get('/register', (req, res) => {
+  let templateVars = {};
+  if (req.cookies !== undefined) {
+    templateVars.username = req.cookies["username"];
+  }
+  res.render("register",templateVars);
+});

@@ -4,6 +4,7 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const { getUserByEmail } = require('./helpers');
 
 // Users
 const users = {
@@ -204,7 +205,7 @@ app.post('/register', (req, res) => {
   const emailId = req.body.email;
   const password = req.body.password;
 
-  if (!emailId || !password || emailLookUp(emailId)) {
+  if (!emailId || !password || getUserByEmail(emailId,getUserByEmail)) {
     res.status(400).send('BAD REQUEST');
   }
 
@@ -239,41 +240,26 @@ app.post('/login', (req, res) => {
   let emailId = req.body.email;
   let password = req.body.password;
   if (!emailId || !password) {
-    res.status(400).send('BAD REQUEST');
+    res.status(400).send('USERNAME AND PASSWORD CANNOT BE BLANK');
   }
 
-  let loggedInUser = emailLookUp(emailId);
+  let loggedInUser = getUserByEmail(emailId,users);
+  console.log(users);
   if (loggedInUser) {
 
-    console.log('password', loggedInUser.password);
-    console.log('bcrypt output', !bcrypt.compareSync(password, loggedInUser.password));
-    if (!bcrypt.compareSync(password, loggedInUser.password)) {
-      console.log('password=', loggedInUser.password);
-      res.status(403).send('BAD REQUEST');
+    if (!bcrypt.compareSync(password, users[loggedInUser]['password'])) {
+      console.log('password=', users[loggedInUser].password);
+      res.status(422).send('INVALID USERNAME OR PASSWORD');
     }
 
-    req.session['user_id'] = loggedInUser.id;
+    req.session['user_id'] = loggedInUser;
     res.redirect("/urls");
   } else {
-    res.status(403).send('BAD REQUEST');
+    res.status(402).send('INVALID USERNAME OR PASSWORD');
   }
 
   res.redirect('/login');
 });
-
-
-
-// Checks if email exists. If exists return the user.
-const emailLookUp = function(email) {
-  let existingEntries = Object.values(users);
-  let found = existingEntries.find(x => x.email === email);
-  if (found) {
-    return found;
-  }
-
-  return false;
-};
-
 
 // Returns the urls (database entries) of the user with provided id.
 const urlsForUser = function(id) {

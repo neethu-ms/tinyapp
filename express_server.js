@@ -85,11 +85,21 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   };
- 
+   
+  
+
   if (req.cookies !== undefined) {
     templateVars.user = users[req.cookies["user_id"]];
+    let userSpecificURLs = urlsForUser(req.cookies["user_id"]);
+    for (let key of Object.keys(userSpecificURLs)) {
+      if (key === templateVars.shortURL) {
+        res.render("urls_show",templateVars);
+      }
+    }
+    
   }
-  res.render("urls_show",templateVars);
+  res.send('Not accessible');
+
 });
 
 app.post('/urls', (req, res) => {

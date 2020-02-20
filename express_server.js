@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({extended:true}));
 let cookieParser = require('cookie-parser');
 
@@ -9,12 +10,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "$2b$10$5MfULDSpDayvdG5/M1YcoeRu4Kng5XuQWZh3dotpSYM/29ymu1c52"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "$2b$10$.WGYL80FaSGeVkDXX1NQCuiaOZ5pNyoBGNnP9fsB9zXf.7yv43fEa"
   }
 };
 
@@ -170,7 +171,11 @@ app.post('/login', (req, res) => {
 
   let loggedInUser = emailLookUp(emailId);
   if (loggedInUser) {
-    if (password !== loggedInUser.password) {
+    // if (password !== loggedInUser.password) {
+    console.log('password',loggedInUser.password);
+    console.log('bcrypt output',!bcrypt.compareSync(password,loggedInUser.password));
+    if (!bcrypt.compareSync(password,loggedInUser.password)) {
+      console.log('password=',loggedInUser.password);
       res.status(403).send('BAD REQUEST');
     }
     res.cookie('user_id',loggedInUser.id);
@@ -202,19 +207,22 @@ const emailLookUp = function(email) {
   return false;
 };
 app.post('/register', (req, res) => {
-  let randomID = "U" + generateRandomString();
-  let emailId = req.body.email;
-  let password = req.body.password;
+  const randomID = "U" + generateRandomString();
+  const emailId = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (!emailId || !password || emailLookUp(emailId)) {
     res.status(400).send('BAD REQUEST');
   }
   let newUser =  {
     id: randomID,
     email: emailId,
-    password: req.body.password
+    password: hashedPassword
+    //password: req.body.password
   };
   users[randomID] = newUser;
   res.cookie('user_id',randomID);
+  console.log(users);
   res.redirect("/urls");
 });
 

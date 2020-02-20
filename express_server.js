@@ -29,13 +29,27 @@ app.set('view engine', 'ejs');
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   console.log('in post');
-  delete urlDatabase[req.params.shortURL];
+  let userSpecificURLs = urlsForUser(req.cookies["user_id"]);
+  for (let key of Object.keys(userSpecificURLs)) {
+    if (key === req.params.shortURL) {
+      delete urlDatabase[req.params.shortURL];
+        
+    }
+  }
+  //delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
 app.post('/urls/:shortURL', (req, res) => {
   console.log('in post');
-  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+  let userSpecificURLs = urlsForUser(req.cookies["user_id"]);
+  for (let key of Object.keys(userSpecificURLs)) {
+    if (key === req.params.shortURL) {
+      urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+        
+    }
+  }
+  
   res.redirect(`/urls/${req.params.shortURL}`);
 });
 
@@ -117,7 +131,7 @@ app.post('/urls', (req, res) => {
 
 app.get('/u/:shortURL',(req, res) => {
   let shortURL = req.params.shortURL;
-  let longURL =  urlDatabase[shortURL].longURL;
+  let longURL =  urlDatabase[shortURL]['longURL'];
   res.redirect(`${longURL}`);
 });
 

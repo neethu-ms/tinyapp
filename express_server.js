@@ -93,7 +93,7 @@ app.post('/login', (req, res) => {
 
 });
 
-// Register form  // If user is logged in, redirects to Urls page
+// Register form  If user is logged in, redirects to Urls page, otherwise to register form
 app.get('/register', (req, res) => {
   if (req.session["user_id"]) {
     res.redirect("/urls");
@@ -146,17 +146,7 @@ app.post('/urls', (req, res) => {
     res.send('Permission Denied');
     return;
   }
-  let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
-  for (let key of Object.keys(userSpecificURLs)) {
-    if (key === req.params.shortURL) {
-      delete urlDatabase[req.params.shortURL];
-
-    }
-    if (!userSpecificURLs) {
-      res.send('Permission denied');
-      return;
-    }
-  }
+  
   let longURL = req.body.longURL;
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {};
@@ -266,7 +256,7 @@ app.get('/urls/:shortURL', (req, res) => {
         longURL: urlDatabase[req.params.shortURL].longURL
       };
       templateVars.user = users[req.session["user_id"]];
-      let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
+      
       for (let key of Object.keys(userSpecificURLs)) {
         if (key === templateVars.shortURL) {
           res.render("urls_show", templateVars);

@@ -267,7 +267,7 @@ app.get('/urls/:shortURL', (req, res) => {
  
   }
   
-  res.send('Not accessible');
+  res.send('Permission denied');
    
 });
 

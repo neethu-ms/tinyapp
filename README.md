@@ -13,7 +13,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
       <http://ip:port/u/shortURL>
 
 ## Final Product
-
+![Register"](docs/Register.png "Register")
 ![LoggedInUser"](docs/LoggedInUser.png "User Logged In")
 !["UserNotLogedIn"](docs/UserNotLoggedIn.png "User Login Page")
 !["CreateNewURL"](docs/CreateNewURL.png "Create New URL")

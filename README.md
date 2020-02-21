@@ -14,7 +14,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["LoggedInUser"](docs/LoggedInUser.png)
+![LoggedInUser"](docs/LoggedInUser.png)
 !["UserNotLogedIn"](docs/UserNotLoggedIn.png)
 !["CreateNewURL"](docs/CreateNewURL.png)
 !["EditURL"](docs/EditURL.png)

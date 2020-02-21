@@ -33,7 +33,10 @@ const urlDatabase = {
 };
 
 // middleware
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
 app.use(cookieSession({
   name: 'session',
   keys: ['12345A']
@@ -45,41 +48,105 @@ app.set('view engine', 'ejs');
 
 /* Endpoints start */
 
-// Index page
+// Home page. If user is not logged in, redirects to login page. Otherwise to urls page.
 app.get('/', (req, res) => {
-  if (req.session["user_id"]) {
-    res.redirect('/urls');
-    return;
-  } else {
-
+  if (!req.session["user_id"]) {
     res.redirect('/login');
+    return;
   }
- 
+  res.redirect('/urls');
+});
+
+// Login form.  If user is already logged in, will redirect to urls page
+app.get('/login', (req, res) => {
+  if (req.session["user_id"]) {
+    res.redirect("/urls");
+    return;
+  }
+  let templateVars = {};
+  templateVars.user = undefined;
+  res.render("login", templateVars);
+});
+
+// Login  Users credentials are validated.
+app.post('/login', (req, res) => {
+  let emailId = req.body.email;
+  let password = req.body.password;
+  if (!emailId || !password) {
+    res.status(422).send('USERNAME AND PASSWORD CANNOT BE BLANK');
+    return;
+  }
+
+  let loggedInUser = getUserByEmail(emailId, users);
+  if (!loggedInUser) {
+    res.status(422).send('INVALID USERNAME OR PASSWORD');
+    return;
+  }
+
+  if (!bcrypt.compareSync(password, users[loggedInUser]['password'])) {
+    res.status(422).send('INVALID USERNAME OR PASSWORD');
+    return;
+  }
+
+  req.session['user_id'] = loggedInUser;
+  res.redirect("/urls");
+
+});
+
+// Register form  // If user is logged in, redirects to Urls page
+app.get('/register', (req, res) => {
+  if (req.session["user_id"]) {
+    res.redirect("/urls");
+    return;
+  }
+  let templateVars = {};
+  templateVars.user = undefined;
+  res.render("register", templateVars);
+});
+
+// Register
+app.post('/register', (req, res) => {
+  const emailId = req.body.email;
+  const password = req.body.password;
+  if (!emailId || !password) {
+    res.status(422).send('EMAIL ID AND PASSWORD CANNOT BE EMPTY');
+    return;
+  }
+
+  if (getUserByEmail(emailId, users)) {
+    res.status(422).send('EMAIL exists');
+    return;
+  }
+
+  const randomID = "U" + generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  let newUser = {
+    id: randomID,
+    email: emailId,
+    password: hashedPassword
+
+  };
+  users[randomID] = newUser;
+  req.session['user_id'] = randomID;
+  res.redirect("/urls");
+});
+
+
+// Logout
+app.post('/logout', (req, res) => {
+
+  req.session = null;
+  res.redirect('/login');
 });
 
 
 // Post url
 app.post('/urls', (req, res) => {
-  console.log('entered post');
-  let longURL = req.body.longURL;
-  let shortURL = generateRandomString();
-  console.log('short', shortURL);
-  console.log('long', longURL);
-  urlDatabase[shortURL] = {};
-  urlDatabase[shortURL]['longURL'] = longURL;
-  urlDatabase[shortURL]['userID'] = req.session["user_id"];
-  console.log(urlDatabase);
-  res.redirect(`/urls/${shortURL}`);
-});
-
-// Delete URL
-app.post('/urls/:shortURL/delete', (req, res) => {
-  console.log('in post');
   if (!req.session["user_id"]) {
     res.send('Permission Denied');
     return;
   }
-  let userSpecificURLs = urlsForUser(req.session["user_id"],urlDatabase);
+  let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
   for (let key of Object.keys(userSpecificURLs)) {
     if (key === req.params.shortURL) {
       delete urlDatabase[req.params.shortURL];
@@ -90,59 +157,73 @@ app.post('/urls/:shortURL/delete', (req, res) => {
       return;
     }
   }
-
-  res.redirect('/urls');
+  let longURL = req.body.longURL;
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = {};
+  urlDatabase[shortURL]['longURL'] = longURL;
+  urlDatabase[shortURL]['userID'] = req.session["user_id"];
+  res.redirect(`/urls/${shortURL}`);
 });
 
-// Update URL
-app.post('/urls/:shortURL', (req, res) => {
-  console.log('in post');
+// Delete URL
+app.post('/urls/:shortURL/delete', (req, res) => {
   if (!req.session["user_id"]) {
     res.send('Permission Denied');
     return;
   }
-  let userSpecificURLs = urlsForUser(req.session["user_id"],urlDatabase);
-  for (let key of Object.keys(userSpecificURLs)) {
-    if (key === req.params.shortURL) {
-      urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-
-    }
-  }
-
+  let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
   if (!userSpecificURLs) {
     res.send('Permission denied');
     return;
   }
-
-  res.redirect('/urls/');
+  for (let key of Object.keys(userSpecificURLs)) {
+    if (key === req.params.shortURL) {
+      delete urlDatabase[req.params.shortURL];
+      res.redirect('/urls');
+      return;
+    }
+ 
+  }
+  res.send('Permission denied');
+ 
 });
 
+// Update URL
+app.post('/urls/:shortURL', (req, res) => {
+  if (!req.session["user_id"]) {
+    res.send('Permission Denied');
+    return;
+  }
+  let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
+  if (!userSpecificURLs) {
+    res.send('Permission denied');
+    return;
+  }
+  for (let key of Object.keys(userSpecificURLs)) {
+    if (key === req.params.shortURL) {
+      urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+      res.redirect('/urls/');
+      return;
+    }
+  }
 
-
-
-
-// URLS in json format
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
+ 
+  res.send('Permission denied');
 });
 
-// hello page
-app.get('/hello', (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 //Get urls
 app.get('/urls', (req, res) => {
-  let templateVars = {};
-
-  if (!req.session || !req.session["user_id"]) {
+  
+  if (!req.session["user_id"]) {
     res.redirect('/login');
     return;
   }
 
-  templateVars.user = users[req.session["user_id"]];
-  templateVars.urls = urlsForUser(req.session["user_id"],urlDatabase);
+  let templateVars = {};
 
+  templateVars.user = users[req.session["user_id"]];
+  templateVars.urls = urlsForUser(req.session["user_id"], urlDatabase);
 
   res.render("urls_index", templateVars);
 });
@@ -151,8 +232,7 @@ app.get('/urls', (req, res) => {
 //  new url form
 app.get('/urls/new', (req, res) => {
   let templateVars = {};
-  console.log("session", req.session);
-  if (!req.session || !req.session["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect('/login');
     return;
   }
@@ -163,35 +243,46 @@ app.get('/urls/new', (req, res) => {
 
 // Get short url
 app.get('/urls/:shortURL', (req, res) => {
-  
+
   if (!urlDatabase[req.params.shortURL]) {
     res.send('URL does not exist');
     return;
   }
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL
-  };
   
-  if (req.session !== undefined) {
-    templateVars.user = users[req.session["user_id"]];
-    let userSpecificURLs = urlsForUser(req.session["user_id"],urlDatabase);
-    for (let key of Object.keys(userSpecificURLs)) {
-      if (key === templateVars.shortURL) {
-        res.render("urls_show", templateVars);
+
+  if (!req.session["user_id"]) {
+    res.send('Permission Denied');
+    return;
+  }
+  let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
+  if (!userSpecificURLs) {
+    res.send('Permission denied');
+    return;
+  }
+  for (let key of Object.keys(userSpecificURLs)) {
+    if (key === req.params.shortURL) {
+      let templateVars = {
+        shortURL: req.params.shortURL,
+        longURL: urlDatabase[req.params.shortURL].longURL
+      };
+      templateVars.user = users[req.session["user_id"]];
+      let userSpecificURLs = urlsForUser(req.session["user_id"], urlDatabase);
+      for (let key of Object.keys(userSpecificURLs)) {
+        if (key === templateVars.shortURL) {
+          res.render("urls_show", templateVars);
+          return;
+        }
       }
     }
-
-  } else {
-    res.send('Not accessible');
+ 
   }
-
+  
+  res.send('Not accessible');
+   
 });
 
 
-
-
-// Get short url
+// Get long url from short url
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
@@ -200,108 +291,6 @@ app.get('/u/:shortURL', (req, res) => {
   }
   let longURL = urlDatabase[shortURL]['longURL'];
   res.redirect(`${longURL}`);
-});
-
-
-
-
-// Register form
-app.get('/register', (req, res) => {
-  if (req.session["user_id"]) {
-    res.redirect("/urls");
-    return;
-  }
-  let templateVars = {};
-  if (req.session !== undefined) {
-    templateVars.user = users[req.session["user_id"]];
-
-  }
-  res.render("register", templateVars);
-});
-
-// Register
-app.post('/register', (req, res) => {
-
- 
-  const randomID = "U" + generateRandomString();
-  const emailId = req.body.email;
-  const password = req.body.password;
-  if (!emailId || !password) {
-    res.status(400).send('EMAIL ID AND PASSWORD CANNOT BE EMPTY');
-    return;
-  }
-
-  if (getUserByEmail(emailId,users)) {
-    res.status(400).send('EMAIL exists');
-    return;
-  }
-
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  let newUser = {
-    id: randomID,
-    email: emailId,
-    password: hashedPassword
-
-  };
-  users[randomID] = newUser;
-
-
-  req.session['user_id'] = randomID;
-  console.log(users);
-  res.redirect("/urls");
-});
-
-// Login form
-app.get('/login', (req, res) => {
-  let templateVars = {};
-
-  if (req.session["user_id"]) {
-    res.redirect("/urls");
-    return;
-  }
-  
-  if (req.session !== undefined) {
-    templateVars.user = users[req.session["user_id"]];
-  }
-
-  res.render("login", templateVars);
-});
-
-// Login
-app.post('/login', (req, res) => {
-
-  let emailId = req.body.email;
-  let password = req.body.password;
-  if (!emailId || !password) {
-    res.status(400).send('USERNAME AND PASSWORD CANNOT BE BLANK');
-    return;
-  }
-
-  let loggedInUser = getUserByEmail(emailId,users);
-  console.log(users);
-  if (loggedInUser) {
-
-    if (!bcrypt.compareSync(password, users[loggedInUser]['password'])) {
-      console.log('password=', users[loggedInUser].password);
-      res.status(422).send('INVALID USERNAME OR PASSWORD');
-      return;
-    }
-
-    req.session['user_id'] = loggedInUser;
-    res.redirect("/urls");
-    return;
-  } else {
-    res.status(402).send('INVALID USERNAME OR PASSWORD');
-  }
-
-  //res.redirect('/login');
-});
-
-// Logout
-app.post('/logout', (req, res) => {
-
-  req.session = null;
-  res.redirect('/login');
 });
 
 // Endpoints end
